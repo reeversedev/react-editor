@@ -38,7 +38,7 @@ class Editor extends Component {
   componentWillUnmount() {
     document.removeEventListener("keydown", this.saveFunction, false);
   }
-  saveFunction(event) {
+  saveFunction = async event => {
     // if (event.keyCode === 27) {
     //   //Do whatever when esc is pressed
     //   console.log('papapapappapa')
@@ -48,8 +48,9 @@ class Editor extends Component {
       // event.preventDefault();
       // return false;
       // console.log("That's a save button");
+      await this.child.saveData();
     }
-  }
+  };
   getUpdatedDocument = async () => {
     await this.props.getDocument(
       "5c021bf2342baa6a1840f9d5",
@@ -62,9 +63,6 @@ class Editor extends Component {
         console.log("there is an error", e);
       }
     );
-  };
-  onKeyDown = event => {
-    console.log(event);
   };
   render() {
     const { editorState } = this.state;
@@ -82,6 +80,7 @@ class Editor extends Component {
               {...this.state}
               {...this.props}
               updated={this.getUpdatedDocument}
+              onRef={ref => (this.child = ref)}
             />
           ]}
         />
@@ -96,6 +95,12 @@ class CustomOption extends React.Component {
     onChange: PropTypes.func,
     editorState: PropTypes.object
   };
+  componentDidMount() {
+    this.props.onRef(this);
+  }
+  componentWillUnmount() {
+    this.props.onRef(undefined);
+  }
   saveData = async () => {
     const data = await {
       id: "5c021bf2342baa6a1840f9d5",
