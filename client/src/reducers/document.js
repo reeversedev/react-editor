@@ -1,4 +1,4 @@
-import { GET_DOCUMENT, POST_DOCUMENT } from "../actions/type";
+import { GET_DOCUMENT, POST_DOCUMENT, SAVE_DOCUMENT } from "../actions/type";
 
 const INTITAL_STATE = {
   document: {}
@@ -15,6 +15,11 @@ export default function(state = INTITAL_STATE, action) {
       return {
         ...state,
         postDocument: action.payload.data
+      };
+    case SAVE_DOCUMENT:
+      return {
+        ...state,
+        saveDocument: action.payload.data
       };
     default:
       return {

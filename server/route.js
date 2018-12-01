@@ -5,10 +5,9 @@ const Document = require("./model");
 
 router.get("/document/:id", (req, res) => {
   Document.findById(req.params.id, (err, doc) => {
-    if (err) {
-      res.send(err);
+    if (!err) {
+      res.json(doc);
     }
-    res.json(doc);
   });
 });
 

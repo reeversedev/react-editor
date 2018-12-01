@@ -4,15 +4,18 @@ import { Editor as ReactEditor } from "react-draft-wysiwyg";
 import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { getDocument, postDocument } from "../actions/index";
+import { getDocument, postDocument, saveDocument } from "../actions/index";
 import { connect } from "react-redux";
 import SaveButton from "./SaveButton";
 import PropTypes from "prop-types";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 class Editor extends Component {
   state = {
     editorState: EditorState.createEmpty(),
-    data: ""
+    data: "",
+    updatedData: ""
   };
 
   onEditorStateChange = editorState => {
@@ -20,17 +23,39 @@ class Editor extends Component {
       editorState
     });
   };
-  writeData = data => {
+
+  writeData = () => {
     this.setState({
-      data: draftToHtml(convertToRaw(editorState.getCurrentContent()))
+      data: draftToHtml(
+        convertToRaw(this.state.editorState.getCurrentContent())
+      )
     });
   };
   componentDidMount = async () => {
+    document.addEventListener("keydown", this.saveFunction, false);
+    await this.getUpdatedDocument();
+  };
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.saveFunction, false);
+  }
+  saveFunction(event) {
+    // if (event.keyCode === 27) {
+    //   //Do whatever when esc is pressed
+    //   console.log('papapapappapa')
+    // }
+    if ((event.ctrlKey || event.metaKey) && event.which == 83) {
+      // Save Function
+      // event.preventDefault();
+      // return false;
+      // console.log("That's a save button");
+    }
+  }
+  getUpdatedDocument = async () => {
     await this.props.getDocument(
       "5c021bf2342baa6a1840f9d5",
       () => {
         this.setState({
-          data: this.props.document.data
+          updatedData: this.props.document.data
         });
       },
       e => {
@@ -38,8 +63,8 @@ class Editor extends Component {
       }
     );
   };
-  onKeyDown = () => {
-    console.log("Key Down");
+  onKeyDown = event => {
+    console.log(event);
   };
   render() {
     const { editorState } = this.state;
@@ -50,15 +75,18 @@ class Editor extends Component {
           editorClassName="editor-class"
           toolbarClassName="toolbar-class"
           onEditorStateChange={this.onEditorStateChange}
-          onChange={() => this.onKeyDown()}
-          toolbarCustomButtons={[<CustomOption />]}
+          onChange={() => this.writeData()}
+          onKeyDown={event => this.onKeyDown(event)}
+          toolbarCustomButtons={[
+            <CustomOption
+              {...this.state}
+              {...this.props}
+              updated={this.getUpdatedDocument}
+            />
+          ]}
         />
-        <textarea
-          disabled
-          value={this.state.data}
-          className="wrapper-class"
-          onChange={e => this.writeData(e.target.value)}
-        />
+
+        <div dangerouslySetInnerHTML={{ __html: this.state.updatedData }} />
       </div>
     );
   }
@@ -68,32 +96,41 @@ class CustomOption extends React.Component {
     onChange: PropTypes.func,
     editorState: PropTypes.object
   };
-
-  addStar = () => {
-    const { editorState, onChange } = this.props;
-    const contentState = Modifier.replaceText(
-      editorState.getCurrentContent(),
-      editorState.getSelection(),
-      "⭐",
-      editorState.getCurrentInlineStyle()
+  saveData = async () => {
+    const data = await {
+      id: "5c021bf2342baa6a1840f9d5",
+      date: Date.now(),
+      data: this.props.data
+    };
+    await this.props.saveDocument(
+      data,
+      () => {
+        toast.success("Document is saved", {
+          position: toast.POSITION.TOP_CENTER
+        });
+        this.props.updated();
+      },
+      () => {
+        console.log("Error! something went wrong.");
+      }
     );
-    onChange(EditorState.push(editorState, contentState, "insert-characters"));
   };
 
   render() {
     return (
-      <div onClick={this.addStar}>
+      <div onClick={this.saveData}>
         <button className="btn btn-primary mb-2">Save</button>
       </div>
     );
   }
 }
 function mapStateToProps(state) {
+  console.log(state);
   return {
     document: state.document.getDocument
   };
 }
 export default connect(
   mapStateToProps,
-  { getDocument, postDocument }
+  { getDocument, postDocument, saveDocument }
 )(Editor);
