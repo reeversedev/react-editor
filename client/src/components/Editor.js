@@ -39,15 +39,7 @@ class Editor extends Component {
     document.removeEventListener("keydown", this.saveFunction, false);
   }
   saveFunction = async event => {
-    // if (event.keyCode === 27) {
-    //   //Do whatever when esc is pressed
-    //   console.log('papapapappapa')
-    // }
     if ((event.ctrlKey || event.metaKey) && event.which == 83) {
-      // Save Function
-      // event.preventDefault();
-      // return false;
-      // console.log("That's a save button");
       await this.child.saveData();
     }
   };
@@ -75,6 +67,7 @@ class Editor extends Component {
           onEditorStateChange={this.onEditorStateChange}
           onChange={() => this.writeData()}
           onKeyDown={event => this.onKeyDown(event)}
+          placeholder="Type Here"
           toolbarCustomButtons={[
             <CustomOption
               {...this.state}
@@ -130,7 +123,6 @@ class CustomOption extends React.Component {
   }
 }
 function mapStateToProps(state) {
-  console.log(state);
   return {
     document: state.document.getDocument
   };
